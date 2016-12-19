@@ -1,27 +1,4 @@
 <div .ui.container>
-    <h1>
-      Uploaded Papers
-
-    $if not $ null authorsAndPapers
-                <table .table >
-                    <tr>
-                        <th>
-                            Paper
-                        <th>
-                            Title 
-                        <th>
-                            Authors 
-                        <th>
-                            Abstract 
-                    $forall (authors, Entity paperId paper) <- authorsAndPapers 
-                        <tr>
-                            <td>
-                                <a href=@{DownloadR paperId}>
-                                    #{paperFilepath paper}
-                            <td>
-                                #{paperTitle paper}
-                            <td>
-                                $forall (Entity _ authorToPaper) <- authors
-                                    <p> #{authorToPaperAuthor authorToPaper}
-                            <td>
-                                #{paperAbstract paper}
+  <p> This is where information about a user will go. Currently, we do
+      \ not collect this during the registration process.
+  <p> Ideally, we would like to have information such as the user's name and school.

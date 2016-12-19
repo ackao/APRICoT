@@ -1,0 +1,5 @@
+<div id="dynamicInput">
+  Author 1<br>
+    <input type="text" id=#{idAttr} name=#{nameAttr}>
+  <input type="button" value="Add author" onClick="addInput('dynamicInput');">
+

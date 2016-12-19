@@ -20,12 +20,16 @@ library
                      Model
                      Settings
                      Settings.StaticFiles
+                     Data.PaperStatus
                      Handler.Common
                      Handler.Home
-                     Handler.Comment
                      Handler.Profile
                      Handler.Upload
                      Handler.Download
+                     Handler.Search
+                     Handler.Review
+                     Handler.ReviewPaper
+                     Handler.ProgramChair
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT
@@ -100,6 +104,7 @@ library
                  , mime-mail
                  , conduit-extra
                  , blaze-markup
+                 , esqueleto
 
 executable         conference-management-system
     if flag(library-only)
@@ -114,8 +119,7 @@ executable         conference-management-system
 test-suite test
     type:              exitcode-stdio-1.0
     main-is:           Spec.hs
-    other-modules:     Handler.CommentSpec
-                       Handler.CommonSpec
+    other-modules:     Handler.CommonSpec
                        Handler.HomeSpec
                        Handler.ProfileSpec
                        TestImport

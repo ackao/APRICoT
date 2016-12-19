@@ -1,0 +1,25 @@
+<div .ui.container>
+    <h1> Papers to Review
+    $if not $ null papers 
+                <table .table >
+                    <tr>
+                        <th>
+                            Paper
+                        <th>
+                            Abstract 
+                        <th>
+                            Review
+                        <th>
+                            Comments 
+                    $forall (E.Value reviewId, E.Value status, E.Value comments, E.Value title, E.Value abstract) <- papers
+                        <tr>
+                            <td>
+                                <a href=@{ReviewPaperR reviewId}>
+                                    #{title}
+                            <td>
+                                #{abstract}
+                            <td>
+                                #{show status}
+                            <td>
+                                #{comments}
+

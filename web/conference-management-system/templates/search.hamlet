@@ -1,0 +1,26 @@
+<div .ui.container>
+    <h1> Paper Search Results for "#{text}"
+    $if not $ null papersByTitle
+      <h2> Searches Matching Paper Titles
+      <table .table>
+            $forall (Entity paperId paper) <- papersByTitle
+              <tr>
+                  <td>
+                      <a href=@{DownloadR paperId}>
+                          #{paperTitle paper}
+    $if not $ null papersByAbstract
+      <h2> Searches Matching Paper Abstracts
+      <table .table>
+            $forall (Entity paperId paper) <- papersByAbstract
+              <tr>
+                  <td>
+                      <a href=@{DownloadR paperId}>
+                          #{paperTitle paper}
+    $if not $ null papersByAuthor
+      <h2> Searches Matching Paper Authors
+      <table .table>
+            $forall (E.Value paperId, E.Value title, E.Value _filepath, E.Value _abstract) <- papersByAuthor
+              <tr>
+                  <td>
+                      <a href=@{DownloadR paperId}>
+                          #{title}

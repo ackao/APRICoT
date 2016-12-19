@@ -6,6 +6,8 @@ User
     verified Bool
     verifyKey Text
     resetPasswordKey Text
+    reviewer Bool
+    pc Bool
     deriving Show
 Paper
     owner UserId 
@@ -14,18 +16,13 @@ Paper
     abstract Text
     content ByteString
     deriving Show
-AuthorToPaper
+Author
     author Text
     paper PaperId
-Email
-    email Text
-    userId UserId Maybe
-    verkey Text Maybe
-    UniqueEmail email
-Comment json -- Adding "json" causes ToJSON and FromJSON instances to be derived.
-    message Text
-    userId UserId Maybe
-    deriving Eq
-    deriving Show
+Review
+    paper    PaperId
+    user     UserId
+    status   PaperStatus 
+    comments Text
 
  -- By default this file is used in Model.hs (which is imported by Foundation.hs)

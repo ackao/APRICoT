@@ -16,9 +16,15 @@
                         <a href="@{route}">#{label}
 
             <ul .nav.navbar-nav.navbar-right>
+                <li .navbar-search>
+                    <form method=get>
+                      <div .search-bar>
+                        ^{searchWidget}
+                      <input type=submit value=Search .search-button>
                 $forall MenuItem label route _ <- navbarRightFilteredMenuItems
                     <li :Just route == mcurrentRoute:.active>
                         <a href="@{route}">#{label}
+
 
 <!-- Page Contents -->
 

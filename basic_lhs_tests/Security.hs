@@ -5,9 +5,10 @@ data User = Chair | Alice | Bob | Default
 {-@ data Tagged a <p :: User->Prop> = Tagged (content :: a) @-}
 data Tagged a = Tagged a
 
-{-@ return :: a -> Tagged a @-}
-return :: a -> Tagged a
-return x = Tagged x 
+{-@ ret :: forall a <p :: User -> Prop>.
+              a -> Tagged <p> a @-}
+ret :: a -> Tagged a
+ret x = Tagged x 
 
 
 {-@ bind :: forall a b <p :: User -> Prop, f:: a -> b -> Prop>.
@@ -16,7 +17,26 @@ return x = Tagged x
                 -> Tagged <p> (b<f (content x)>)
 @-}
 bind :: Tagged a -> (a -> Tagged b) -> (Tagged b)
-bind (Tagged x) f = f x
+bind (Tagged x) f = f x  
+
+{-@ liftM :: forall a b <p :: User -> Prop, f:: a -> b -> Prop>.
+                x: Tagged <p> a
+                -> (u:a -> b<f u>)
+                -> Tagged <p> (b<f (content x)>)
+@-}
+liftM :: Tagged a -> (a -> b) -> Tagged b
+liftM x f = bind x (\x' -> ret (f x'))
+
+--{-@ lift :: forall a b <p :: User -> Prop, f:: a -> b -> Prop>.
+--                (u:a -> b<f u>)
+--                -> x: Tagged <p> a
+--                -> Tagged <p> (b<f (content x)>)
+-- @-}
+--lift :: (a -> b) -> Tagged a -> Tagged b
+--lift f x = bind x (\x' -> ret (f x'))
+
+--liftM2 :: (a -> b -> c) -> Tagged a -> Tagged b -> Tagged c
+--liftM2 f x y = bind x (\x' -> bind y (\y' -> ret (f x' y')))  
 
 data PaperId
 data World

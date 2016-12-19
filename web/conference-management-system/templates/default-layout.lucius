@@ -8,6 +8,22 @@
     border-bottom: 2px solid white;
 }
 
+.navbar-search {
+    padding-top: 1.2em;
+    color: black;
+}
+
+.search-bar label {
+    color: white;
+    padding-right: .75em;
+}
+
+.search-button {
+    background: transparent;
+    border: none !important;
+    font-size:0;
+}
+
 .navbar-nav {
     padding-bottom: 1em;
 }

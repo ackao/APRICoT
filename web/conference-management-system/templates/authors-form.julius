@@ -1,0 +1,14 @@
+var counter = 1;
+var limit = 8;
+function addInput(divName){
+     if (counter == limit)  {
+          alert("You have reached the limit of adding " + counter + " authors");
+     }
+     else {
+          var newdiv = document.createElement('div');
+          newdiv.innerHTML = "Author " + (counter + 1) + " <br><input type='text' id=#{rawJS idAttr} name=#{rawJS nameAttr}>";
+          document.getElementById(divName).appendChild(newdiv);
+          counter++;
+     }
+}
+
