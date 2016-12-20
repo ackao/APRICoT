@@ -4,6 +4,7 @@
 module Handler.Download where
 
 import Import
+import DB
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 
@@ -15,18 +16,9 @@ import qualified Data.Text.Encoding as Text
 getDownloadR :: Key Paper -> Handler TypedContent
 getDownloadR ident = do
     -- Attempt to retrieve the file, failing with a 404.
-    Paper _owner filename _title _abstract bytes <- getById ident
+    Paper _owner filename _title _abstract bytes <- getPaperById ident
     -- The Content-Disposition header hints that the resource should be
     -- downloaded as a file.
     addHeader "Content-Disposition" $ Text.concat
         [ "attachment; filename=\"", filename, "\""]
     sendResponse (Text.encodeUtf8 $ "application/pdf", toContent bytes)
-
--- | Attempt to get a paper given a Key. If no paper can be found, we return
--- a 404 response.
-getById :: Key Paper -> Handler Paper 
-getById ident = do
-    mfile <- runDB $ get ident
-    case mfile of
-      Nothing -> notFound
-      Just file -> return file

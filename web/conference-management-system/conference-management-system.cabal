@@ -20,6 +20,7 @@ library
                      Model
                      Settings
                      Settings.StaticFiles
+                     DB
                      Data.PaperStatus
                      Handler.Common
                      Handler.Home
