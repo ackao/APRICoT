@@ -1,8 +1,8 @@
 module Handler.Upload where
 
 import Import
-import DB
 import Text.Julius
+import qualified Util as Util
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
 import Data.Conduit.Binary
@@ -19,7 +19,7 @@ data FileForm = FileForm
 
 postUploadR :: Handler Html
 postUploadR = do
-    reviewerOpts <- reviewers
+    reviewerOpts <- Util.reviewerOpts
     ((result, _), _) <- runFormPost $ uploadForm reviewerOpts
     case result of
         FormSuccess (FileForm fi title authors abstract conflicts) -> do
@@ -38,7 +38,7 @@ postUploadR = do
 
 getUploadR :: Handler Html
 getUploadR = do
-    reviewerOpts <- reviewers
+    reviewerOpts <- Util.reviewerOpts
     (formWidget, formEnctype) <- generateFormPost $ uploadForm reviewerOpts
     defaultLayout $ do
         $(widgetFile "upload")
@@ -51,10 +51,6 @@ uploadForm reviewerOpts = renderBootstrap3 BootstrapBasicForm $ FileForm
     <*> areq textareaField "Abstract" Nothing
     <*> areq (checkboxesFieldList reviewerOpts) "Conflicts" Nothing
 
-reviewers :: Handler [(Text, Key User)]
-reviewers = do
-    reviewerEnts <- getReviewers
-    return $ map (\(Entity uid user) -> (userUsername user, uid)) reviewerEnts
 
 
 authorsField :: Field Handler [Text]

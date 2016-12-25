@@ -21,6 +21,7 @@ library
                      Settings
                      Settings.StaticFiles
                      DB
+                     Util
                      Data.PaperStatus
                      Handler.Common
                      Handler.Home
@@ -31,6 +32,7 @@ library
                      Handler.Review
                      Handler.ReviewPaper
                      Handler.ProgramChair
+                     Handler.AssignPaper
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT

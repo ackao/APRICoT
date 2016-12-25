@@ -196,8 +196,8 @@ getPapersWithAbstract abstract = runDB $ selectList [like PaperAbstract abstract
 --         WHERE phase = 3
 --           AND review.id = paper.id
 --           AND review.status = Accepted
-getPapersWithAuthor :: (YesodPersist site, YesodPersistBackend site ~ SqlBackend) =>
-        Text -> HandlerT site IO [(E.Value (Key Paper), E.Value Text, E.Value Text, E.Value Text)]
+getPapersWithAuthor :: Text 
+    -> Handler [(E.Value (Key Paper), E.Value Text, E.Value Text, E.Value Text)]
 getPapersWithAuthor authorName = do
     papers <- runDB
            $ E.select
@@ -210,4 +210,9 @@ getPapersWithAuthor authorName = do
                     , paper ^. PaperFilepath
                     , paper ^. PaperAbstract 
                     )
+    return papers
+
+getAllPapers :: Handler [Entity Paper]
+getAllPapers = do
+    papers <- runDB $ selectList [] []
     return papers

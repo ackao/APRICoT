@@ -183,6 +183,7 @@ instance Yesod App where
     isAuthorized ReviewR _ = isReviewer
     isAuthorized (ReviewPaperR _) _ = isReviewer
     isAuthorized ProgramChairR _ = isPc
+    isAuthorized AssignPaperR _ = isPc
 
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows

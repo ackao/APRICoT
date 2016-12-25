@@ -13,3 +13,4 @@
 /review ReviewR GET
 /review/#ReviewId ReviewPaperR GET POST
 /pc ProgramChairR GET POST
+/assign AssignPaperR POST
