@@ -9,6 +9,7 @@ User
     reviewer Bool
     pc Bool
     deriving Show
+    deriving Eq
 Paper
     owner UserId 
     filepath Text 
@@ -24,5 +25,8 @@ Review
     user     UserId
     status   PaperStatus 
     comments Text
+Conflict
+    paper PaperId
+    user  UserId
 
  -- By default this file is used in Model.hs (which is imported by Foundation.hs)
