@@ -23,15 +23,20 @@ postUploadR = do
     ((result, _), _) <- runFormPost $ uploadForm reviewerOpts
     case result of
         FormSuccess (FileForm fi title authors abstract conflicts) -> do
-            fileBytes <- runResourceT $ fileSource fi $$ sinkLbs
-            (uid, _) <- requireAuthPair
-            paperId <- runDB $ insert $ Paper uid (fileName fi)
+            case not (fileContentType fi == "application/pdf") of
+                True -> do
+                    setMessage "File must be a PDF"
+                    redirect UploadR
+                False -> do
+                    fileBytes <- runResourceT $ fileSource fi $$ sinkLbs
+                    (uid, _) <- requireAuthPair
+                    paperId <- runDB $ insert $ Paper uid (fileName fi)
                             title (unTextarea abstract)
                                  (S.pack . L.unpack $ fileBytes)
-            _ <- runDB $ mapM (\author -> insert_ $ Author author paperId) authors
-            _ <- runDB $ mapM (\conflict -> insert_ $ Conflict paperId conflict) conflicts
-            setMessage "PDF saved"
-            redirect HomeR
+                    _ <- runDB $ mapM (\author -> insert_ $ Author author paperId) authors
+                    _ <- runDB $ mapM (\conflict -> insert_ $ Conflict paperId conflict) conflicts
+                    setMessage "PDF saved"
+                    redirect HomeR
         _ -> do
             setMessage "Something went wrong"
             redirect UploadR 
