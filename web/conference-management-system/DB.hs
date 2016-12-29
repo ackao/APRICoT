@@ -134,6 +134,7 @@ getPapersToReview = do
            $ E.select
            $ E.from $ \(review `E.InnerJoin` paper) -> do
                 E.on $ (paper ^. PaperId E.==. review ^. ReviewPaper ) E.&&.
+                  ((paper ^. PaperReady E.==. E.val True)) E.&&.
                   ((review ^. ReviewUser) E.==. E.val uid)
                 return
                     ( review ^. ReviewId 
