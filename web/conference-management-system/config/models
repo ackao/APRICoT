@@ -16,6 +16,7 @@ Paper
     title Text
     abstract Text
     content ByteString
+    ready Bool
     deriving Show
 Author
     author Text

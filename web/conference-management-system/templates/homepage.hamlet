@@ -13,6 +13,8 @@
                             Authors 
                         <th>
                             Abstract 
+                        <th> 
+                            Action
                     $forall (authors, Entity paperId paper) <- authorsAndPapers 
                         <tr>
                             <td>
@@ -25,3 +27,9 @@
                                     <p> #{authorAuthor authorEntity}
                             <td>
                                 #{paperAbstract paper}
+                            <td>
+                                <form method="post" action=@{ReadyR paperId}>
+                                    $if (paperReady paper)
+                                        <input type="submit" value="Mark Not Ready">
+                                    $else
+                                        <input type="submit" value="Mark Ready">

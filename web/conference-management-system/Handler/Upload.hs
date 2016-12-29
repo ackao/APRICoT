@@ -14,7 +14,7 @@ data FileForm = FileForm
     , title    :: Text
     , authors  :: [Text]
     , abstract :: Textarea
-    , conflicts :: [Key User]
+    , conflicts :: Maybe [Key User]
     }
 
 postUploadR :: Handler Html
@@ -22,7 +22,7 @@ postUploadR = do
     reviewerOpts <- Util.reviewerOpts
     ((result, _), _) <- runFormPost $ uploadForm reviewerOpts
     case result of
-        FormSuccess (FileForm fi title authors abstract conflicts) -> do
+        FormSuccess (FileForm fi title authors abstract mConflicts) -> do
             case not (fileContentType fi == "application/pdf") of
                 True -> do
                     setMessage "File must be a PDF"
@@ -32,9 +32,14 @@ postUploadR = do
                     (uid, _) <- requireAuthPair
                     paperId <- runDB $ insert $ Paper uid (fileName fi)
                             title (unTextarea abstract)
-                                 (S.pack . L.unpack $ fileBytes)
+                                 (S.pack . L.unpack $ fileBytes) False
                     _ <- runDB $ mapM (\author -> insert_ $ Author author paperId) authors
-                    _ <- runDB $ mapM (\conflict -> insert_ $ Conflict paperId conflict) conflicts
+                    case mConflicts of
+                        Just conflicts -> do
+                            _ <- runDB $ mapM (\conflict -> insert_ $ Conflict paperId conflict) conflicts
+                            return ()
+                        _ -> do
+                           return ()
                     setMessage "PDF saved"
                     redirect HomeR
         _ -> do
@@ -54,7 +59,7 @@ uploadForm reviewerOpts = renderBootstrap3 BootstrapBasicForm $ FileForm
     <*> areq textField "Paper Title" Nothing
     <*> areq authorsField "Authors" Nothing
     <*> areq textareaField "Abstract" Nothing
-    <*> areq (checkboxesFieldList reviewerOpts) "Conflicts" Nothing
+    <*> aopt (checkboxesFieldList reviewerOpts) "Conflicts" Nothing
 
 
 

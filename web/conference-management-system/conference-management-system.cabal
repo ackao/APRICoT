@@ -33,6 +33,7 @@ library
                      Handler.ReviewPaper
                      Handler.ProgramChair
                      Handler.AssignPaper
+                     Handler.Ready
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT
