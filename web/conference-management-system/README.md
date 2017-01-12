@@ -27,8 +27,6 @@ After cloning the repo, you'll need to install all the dependencies.
 We store configurations for our environment variables in a .env file. You'll
 need your .env file to contain the following fields:
 
-  * GOOGLE_OAUTH_CLIENT_ID="client id for google oauth"
-  * GOOGLE_OAUTH_CLIENT_SECRET="client secret for google oauth"
   * GOOGLE_USERNAME="email goes here (for sending registration confirmations)"
   * GOOGLE_PASSWORD="password goes here"
   

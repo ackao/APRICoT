@@ -10,7 +10,6 @@ import Yesod.Auth.Dummy
 
 import Yesod.Default.Util   (addStaticContentExternal)
 import Yesod.Core.Types     (Logger)
-import Yesod.Auth.OAuth2.Google
 import Yesod.Auth.Account
 import qualified Yesod.Core.Unsafe as Unsafe
 import qualified Data.CaseInsensitive as CI
@@ -31,7 +30,6 @@ data App = App
     , appConnPool    :: ConnectionPool -- ^ Database connection pool.
     , appHttpManager :: Manager
     , appLogger      :: Logger
-    , appGoogleOAuthKeys :: OAuthKeys
     }
 
 data MenuItem = MenuItem
@@ -264,9 +262,6 @@ instance YesodAuth App where
     -- You can add other plugins like Google Email, email or OAuth here
     authPlugins app = [
                       accountPlugin
-                      , oauth2Google
-                        (oauthKeysClientId $ appGoogleOAuthKeys app)
-                        (oauthKeysClientSecret $ appGoogleOAuthKeys app)
                       ] ++ extraAuthPlugins
         -- Enable authDummy login if enabled.
         where extraAuthPlugins = [authDummy | appAuthDummyLogin $ appSettings app]
