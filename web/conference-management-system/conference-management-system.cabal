@@ -22,6 +22,7 @@ library
                      Settings.StaticFiles
                      DB
                      Util
+                     Auth.Account
                      Data.PaperStatus
                      Handler.Common
                      Handler.Home

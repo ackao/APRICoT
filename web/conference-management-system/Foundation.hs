@@ -19,6 +19,7 @@ import qualified Data.Text as T
 import Network.Mail.Mime
 import Network.Mail.Client.Gmail
 import System.Environment
+import qualified Auth.Account as Auth
 
 -- | The foundation datatype for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -309,6 +310,8 @@ instance AccountSendEmail App
 
 instance YesodAuthAccount (AccountPersistDB App User) App where
     runAccountDB = runAccountPersistDB
+    getNewAccountR = Auth.getNewAccountR
+    postNewAccountR = Auth.postNewAccountR
 
 -- | Access function to determine if a user is logged in.
 isAuthenticated :: Handler AuthResult

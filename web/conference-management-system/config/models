@@ -1,8 +1,8 @@
 User
     username Text
-    UniqueUsername username
     password ByteString
     emailAddress Text
+    UniqueUsername emailAddress
     verified Bool
     verifyKey Text
     resetPasswordKey Text

@@ -16,7 +16,7 @@ share [mkPersist sqlSettings, mkMigrate "migrateAll"]
 
 
 instance PersistUserCredentials User where
-    userUsernameF = UserUsername
+    userUsernameF = UserEmailAddress
     userPasswordHashF = UserPassword
     userEmailF = UserEmailAddress
     userEmailVerifiedF = UserVerified
