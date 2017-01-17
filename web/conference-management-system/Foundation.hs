@@ -15,10 +15,12 @@ import qualified Yesod.Core.Unsafe as Unsafe
 import qualified Data.CaseInsensitive as CI
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text as T
+import qualified Text.Email.Validate as E
 import Network.Mail.Mime
 import Network.Mail.Client.Gmail
 import System.Environment
 import qualified Auth.Account as Auth
+import Yesod.Auth.Message (AuthMessage (InvalidLogin))
 
 -- | The foundation datatype for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -246,18 +248,9 @@ instance YesodAuth App where
 
     authenticate creds = runDB $ do
         x <- getBy $ UniqueUsername $ credsIdent creds
-        case x of
-            Just (Entity uid _) -> return $ Authenticated uid
-            Nothing -> Authenticated <$> insert User
-                { userUsername = credsIdent creds
-                , userPassword = ""
-                , userEmailAddress = ""
-                , userVerified = False
-                , userVerifyKey = ""
-                , userResetPasswordKey = ""
-                , userReviewer = False
-                , userPc = False
-                }
+        return $ case x of
+            Just (Entity uid _) -> Authenticated uid
+            Nothing -> UserError InvalidLogin
 
     -- You can add other plugins like Google Email, email or OAuth here
     authPlugins app = [
@@ -307,6 +300,10 @@ instance YesodAuthAccount (AccountPersistDB App User) App where
     runAccountDB = runAccountPersistDB
     getNewAccountR = Auth.getNewAccountR
     postNewAccountR = Auth.postNewAccountR
+    checkValidUsername u | E.isValid (TE.encodeUtf8 u) = return $ Right u
+    checkValidUsername _ = do
+        mr <- getMessageRender
+        return $ Left $ mr InvalidLogin 
 
 -- | Access function to determine if a user is logged in.
 isAuthenticated :: Handler AuthResult

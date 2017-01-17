@@ -110,6 +110,7 @@ library
                  , conduit-extra
                  , blaze-markup
                  , esqueleto
+                 , email-validate
 
 executable         conference-management-system
     if flag(library-only)
