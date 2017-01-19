@@ -37,6 +37,7 @@ library
                      Handler.AssignPaper
                      Handler.Ready
                      Handler.SetPhase
+                     Handler.FinalDecision
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT

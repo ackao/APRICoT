@@ -16,7 +16,7 @@ import qualified Data.Text.Encoding as Text
 getDownloadR :: Key Paper -> Handler TypedContent
 getDownloadR ident = do
     -- Attempt to retrieve the file, failing with a 404.
-    Paper _owner filename _title _abstract bytes _ready <- getPaperById ident
+    Paper _owner filename _title _abstract bytes _ready _pcAccepted <- getPaperById ident
     -- The Content-Disposition header hints that the resource should be
     -- downloaded as a file.
     addHeader "Content-Disposition" $ Text.concat

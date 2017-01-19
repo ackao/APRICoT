@@ -81,7 +81,7 @@ getReviewers = runDB $ selectList [UserReviewer ==. True] []
 --          FROM user
 --          WHERE known(user.pass)
 --            AND user.isPc = 1)
-getPapersForReviewer :: Entity User -> Handler [(E.Value Text, E.Value (Key Paper))]
+getPapersForReviewer :: Entity User -> Handler [(E.Value Text, E.Value Bool, E.Value (Key Paper))]
 getPapersForReviewer (Entity uid _user) = do
     papers <- runDB
            $ E.select
@@ -90,6 +90,7 @@ getPapersForReviewer (Entity uid _user) = do
                   ((review ^. ReviewUser) E.==. E.val uid)
                 return
                     ( paper ^. PaperTitle
+                    , paper ^. PaperPcAccepted
                     , paper ^. PaperId
                     )
     return papers
@@ -106,7 +107,7 @@ getPapersForReviewer (Entity uid _user) = do
 --         WHERE (known user.pass)
 getUserForUsername :: Text -> Handler (Entity User)
 getUserForUsername userName = do 
-    users <- runDB $ selectList [UserUsername ==. userName] []
+    users <- runDB $ selectList [UserEmailAddress ==. userName] []
     case users of
         [] -> error ("User does not exist: " ++ (T.unpack userName))
         [x] -> return x

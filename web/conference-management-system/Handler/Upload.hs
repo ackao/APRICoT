@@ -32,7 +32,7 @@ postUploadR = do
                     (uid, _) <- requireAuthPair
                     paperId <- runDB $ insert $ Paper uid (fileName fi)
                             title (unTextarea abstract)
-                                 (S.pack . L.unpack $ fileBytes) False
+                                 (S.pack . L.unpack $ fileBytes) False False
                     _ <- runDB $ mapM (\author -> insert_ $ Author author paperId) authors
                     case mConflicts of
                         Just conflicts -> do

@@ -17,6 +17,7 @@ Paper
     abstract Text
     content ByteString
     ready Bool
+    pcAccepted Bool
     deriving Show
 Author
     author Text

@@ -19,15 +19,33 @@
                             Name 
                         <th>
                             Papers
+                        <th>
+                            Final Decision
+                        <th>
+                            Action
                     $forall (Entity _userId user, papers) <- reviewersAndPapers
                         <tr>
                             <td>
                                 #{userUsername user}
                             <td>
-                                $forall (E.Value paperTitle, E.Value paperId) <- papers
+                                $forall (E.Value paperTitle, _accepted, E.Value paperId) <- papers
                                     <p>
                                       <a href=@{DownloadR paperId}>
                                         #{paperTitle}
+                            <td>
+                                $forall (_paperTitle, E.Value accepted, _paperId) <- papers
+                                    $if accepted
+                                        <p>
+                                           Accepted
+                                    $else
+                                        <p>
+                                           Rejected 
+                            <td>
+                                $forall (_paperTitle, _accepted, E.Value paperId) <- papers
+                                    <form method="post" action=@{FinalDecisionR paperId True}>
+                                        <input type="submit" value="Accept">
+                                    <form method="post" action=@{FinalDecisionR paperId False}>
+                                        <input type="submit" value="Reject">
     <div .row>
         <div .col-lg-6>
             <div .bs-callout bs-callout-info well>
