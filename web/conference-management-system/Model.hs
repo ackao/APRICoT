@@ -6,6 +6,7 @@ import ClassyPrelude.Yesod
 import Database.Persist.Quasi
 import Yesod.Auth.Account
 import Data.PaperStatus
+import qualified Data.ConferencePhase as C
 
 -- You can define all of your database entities in the entities file.
 -- You can find more information on persistent and how to declare entities

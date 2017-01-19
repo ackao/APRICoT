@@ -24,6 +24,7 @@ library
                      Util
                      Auth.Account
                      Data.PaperStatus
+                     Data.ConferencePhase
                      Handler.Common
                      Handler.Home
                      Handler.Profile
@@ -35,6 +36,7 @@ library
                      Handler.ProgramChair
                      Handler.AssignPaper
                      Handler.Ready
+                     Handler.SetPhase
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT

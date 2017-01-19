@@ -217,3 +217,11 @@ getAllPapers :: Handler [Entity Paper]
 getAllPapers = do
     papers <- runDB $ selectList [] []
     return papers
+
+getCurrentPhase :: Handler (Entity CurrentPhase)
+getCurrentPhase = do
+    phases <- runDB $ selectList [] [] 
+    return $ case phases of
+        [x] -> x
+        _ -> error "There should only be one phase"
+

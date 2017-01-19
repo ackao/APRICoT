@@ -186,6 +186,7 @@ instance Yesod App where
     isAuthorized ProgramChairR _ = isPc
     isAuthorized AssignPaperR _ = isPc
     isAuthorized (ReadyR _)_ = isAuthenticated -- TODO: Check if owner of paper
+    isAuthorized SetPhaseR _ = isPc
 
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows

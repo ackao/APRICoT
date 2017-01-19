@@ -1,4 +1,14 @@
 <div .ui.container>
+    <h1> Phases
+    <p>
+      Current Phase: #{show $ currentPhasePhase currentPhase}
+    <div .row>
+        <div .col-lg-6>
+            <div .bs-callout bs-callout-info well>
+                <form .form-horizontal method=post action=@{SetPhaseR} enctype=#{setPhaseFormEnctype}>
+                    ^{setPhaseFormWidget}
+                    <button .btn.btn-primary type="submit">
+                       Set Phase
     <h1>
       Reviewers
 
