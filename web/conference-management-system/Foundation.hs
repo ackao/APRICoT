@@ -21,6 +21,8 @@ import Network.Mail.Client.Gmail
 import System.Environment
 import qualified Auth.Account as Auth
 import Yesod.Auth.Message (AuthMessage (InvalidLogin))
+import Yesod.Form.Jquery (YesodJquery)
+import Data.ConferencePhase
 
 -- | The foundation datatype for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -110,11 +112,6 @@ instance Yesod App where
                     , menuItemAccessCallback = True
                     }
                 , NavbarLeft $ MenuItem
-                    { menuItemLabel = "Profile"
-                    , menuItemRoute = ProfileR
-                    , menuItemAccessCallback = isJust muser
-                    }
-                , NavbarLeft $ MenuItem
                     { menuItemLabel = "Upload"
                     , menuItemRoute = UploadR 
                     , menuItemAccessCallback = isJust muser
@@ -177,17 +174,18 @@ instance Yesod App where
     isAuthorized RobotsR _ = return Authorized
     isAuthorized (StaticR _) _ = return Authorized
 
-    isAuthorized ProfileR _ = isAuthenticated
     isAuthorized UploadR _ = isAuthenticated
-    isAuthorized (DownloadR _) _ = isAuthenticated
+    isAuthorized (DownloadR p) _ = isDownloadAuthenticated p 
     isAuthorized (SearchR _) _ = isAuthenticated
-    isAuthorized ReviewR _ = isReviewer
-    isAuthorized (ReviewPaperR _) _ = isReviewer
-    isAuthorized ProgramChairR _ = isPc
-    isAuthorized AssignPaperR _ = isPc
-    isAuthorized (ReadyR _)_ = isAuthenticated -- TODO: Check if owner of paper
-    isAuthorized SetPhaseR _ = isPc
-    isAuthorized (FinalDecisionR _ _) _ = isPc
+    isAuthorized ReviewR _ = isReviewerAuthenticated
+    isAuthorized (ReviewPaperR p) _ = isReviewPaperAuthenticated p
+    isAuthorized ProgramChairR _ = isPcAuthenticated
+    isAuthorized AssignPaperR _ = isPcAuthenticated
+    isAuthorized (ReadyR p)_ = isReadyAuthenticated p
+    isAuthorized SetPhaseR _ = isPcAuthenticated
+    isAuthorized (FinalDecisionR _ _) _ = isPcAuthenticated
+    isAuthorized SearchSuggestR _ = return Authorized
+    isAuthorized (ViewReviewR p) _ = isViewReviewAuthenticated p 
 
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
@@ -225,8 +223,12 @@ searchForm = renderDivs $ areq (searchField False) "Search" Nothing
 instance YesodBreadcrumbs App where
   breadcrumb HomeR = return ("Home", Nothing)
   breadcrumb (AuthR _) = return ("Login", Just HomeR)
-  breadcrumb ProfileR = return ("Profile", Just HomeR)
   breadcrumb UploadR = return ("Upload", Just HomeR)
+  breadcrumb ReviewR  = return ("Review", Just HomeR)
+  breadcrumb (ReviewPaperR _) = return ("Review Paper", Just HomeR)
+  breadcrumb ProgramChairR = return ("Program Chair", Just HomeR)
+  breadcrumb (ViewReviewR _) = return ("See Reviews", Just HomeR)
+  breadcrumb (SearchR _) = return ("Search", Just HomeR)
   breadcrumb  _ = return ("home", Nothing)
 
 -- How to run database actions.
@@ -298,6 +300,8 @@ instance AccountSendEmail App
                   ("Hi " ++ user ++ ",\n\nPlease click this link \
                    \ to reset your password:\n" ++ url)
 
+instance YesodJquery App
+
 instance YesodAuthAccount (AccountPersistDB App User) App where
     runAccountDB = runAccountPersistDB
     getNewAccountR = Auth.getNewAccountR
@@ -316,8 +320,8 @@ isAuthenticated = do
         Just _ -> Authorized
 
 -- | Access function to determine if a user is a reviewer
-isReviewer :: Handler AuthResult
-isReviewer = do
+isReviewerAuthenticated :: Handler AuthResult
+isReviewerAuthenticated = do
     pair <- maybeAuthPair
     let msg = "You must be a reviewer to access this page"
     return $ case pair of
@@ -325,13 +329,110 @@ isReviewer = do
         Just (_id, user) -> if (userReviewer user) then Authorized else Unauthorized msg
 
 -- | Access function to determine if a user is a Pc 
-isPc :: Handler AuthResult
-isPc = do
+isPcAuthenticated :: Handler AuthResult
+isPcAuthenticated = do
     pair <- maybeAuthPair
     let msg = "You must be the program chair to access this page"
     return $ case pair of
         Nothing -> Unauthorized msg
         Just (_id, user) -> if (userPc user) then Authorized else Unauthorized msg
+
+-- | Access function to determine if a user is authenticated for the paper
+isReadyAuthenticated :: PaperId -> Handler AuthResult
+isReadyAuthenticated p = do
+    pair <- maybeAuthPair
+    let msg = "You do not have access to this page"
+    case pair of
+        Nothing -> return $ Unauthorized msg
+        Just (uid, _user) -> do 
+            isAuthor <- isAuthorOnPaper uid p
+            return $ if isAuthor then Authorized else Unauthorized msg
+
+getCurrentPhase :: Handler (Entity CurrentPhase)
+getCurrentPhase = do
+    phases <- runDB $ selectList [] [] 
+    return $ case phases of
+        [x] -> x
+        _ -> error "There should only be one phase"
+
+-- | Helper function to determine if a user can view reviews of a paper
+isViewReviewAuthenticated :: PaperId -> Handler AuthResult
+isViewReviewAuthenticated p = do
+    pair <- maybeAuthPair
+    let msg = "You do not have access to this page"
+    case pair of
+        Nothing -> return $ Unauthorized msg
+        Just (uid, user) -> do 
+            Entity _pid phase <- getCurrentPhase
+            case currentPhasePhase phase of 
+                Decision -> do
+                    let pc = userPc user
+                    isAuthor <- isAuthorOnPaper uid p
+                    return $ if pc || isAuthor then Authorized else Unauthorized msg
+                _ -> return $ if userPc user then Authorized else Unauthorized msg
+
+-- | Access function to determine if a user can download the paper
+isDownloadAuthenticated :: PaperId -> Handler AuthResult
+isDownloadAuthenticated p = do
+    pair <- maybeAuthPair
+    let msg = "You do not have access to this page"
+    case pair of
+        Nothing -> return $ Unauthorized msg
+        Just (uid, user) -> do 
+            Entity _pid phase <- getCurrentPhase
+            case currentPhasePhase phase of 
+                Decision -> do
+                    paper <- runDB $ get404 p
+                    return $ if paperPcAccepted paper then Authorized else Unauthorized msg
+                _ -> do
+                        isReviewer <- isReviewerOnPaper uid p
+                        isAuthor <- isAuthorOnPaper uid p
+                        let pc = userPc user
+                        return $ if isReviewer || isAuthor || pc 
+                            then Authorized else Unauthorized msg
+
+isReviewPaperAuthenticated :: ReviewId -> Handler AuthResult
+isReviewPaperAuthenticated r = do
+    pair <- maybeAuthPair
+    let msg = "You do not have access to this page"
+    case pair of
+        Nothing -> return $ Unauthorized msg
+        Just (uid, _user) -> do 
+            isReviewer <- isReviewerForId uid r
+            return $ if isReviewer then Authorized else Unauthorized msg
+
+-- | Policy Helpers
+-- Some of this was actually really annoying from a SWE perspective. Everything
+-- here is included in "Import", which includes the definitions of App and
+-- Handler. My DB class returns everything as a Handler, since I'm using 
+-- runDB. This makes it so that I cannot use DB functions here, as it would
+-- create an import loop.
+
+-- | Helper function for determining if a user is the author on a paper.
+isAuthorOnPaper :: UserId -> PaperId -> Handler Bool
+isAuthorOnPaper uid p = do
+    authors <- runDB $ selectList [AuthorPaper ==. p] []
+    let authorIds = map (\(Entity _aid author) -> authorAuthorUser author) authors
+    return $ elem uid authorIds
+
+-- | Helper function for determining if a user is the reviewer for the given review id.
+isReviewerForId:: UserId -> ReviewId -> Handler Bool
+isReviewerForId uid r = do
+    review <- runDB $ get404 r
+    return $ uid == (reviewUser review)
+
+-- | Helper function for determining if a user is a reviewer on a paper.
+isReviewerOnPaper :: UserId -> PaperId -> Handler Bool
+isReviewerOnPaper u p = do
+    reviewEnts <- runDB $ selectList [ReviewPaper ==. p] []
+    let reviewerIds = map (\(Entity _rid review) -> reviewUser review) reviewEnts 
+    return $ elem u reviewerIds 
+
+-- | Only authors and PC chair can see who is an author until decision phase.
+canViewAuthors :: Entity User -> PaperId -> Handler Bool
+canViewAuthors (Entity uid u) p = do 
+    isAuthor <- isAuthorOnPaper uid p
+    return $ isAuthor || (userPc u)
 
 instance YesodAuthPersist App
 

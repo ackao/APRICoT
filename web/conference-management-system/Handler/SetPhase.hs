@@ -1,7 +1,6 @@
 module Handler.SetPhase where
 
 import Import
-import DB
 import qualified Handler.ProgramChair as PC
 
 postSetPhaseR :: Handler Html

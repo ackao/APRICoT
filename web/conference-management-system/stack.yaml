@@ -4,4 +4,5 @@ packages:
 - '.'
 extra-deps:
 - smtps-gmail-1.3.2
+- yesod-json-1.2.0
 resolver: lts-6.25

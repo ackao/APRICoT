@@ -27,7 +27,6 @@ library
                      Data.ConferencePhase
                      Handler.Common
                      Handler.Home
-                     Handler.Profile
                      Handler.Upload
                      Handler.Download
                      Handler.Search
@@ -38,6 +37,8 @@ library
                      Handler.Ready
                      Handler.SetPhase
                      Handler.FinalDecision
+                     Handler.SearchSuggest
+                     Handler.ViewReview
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT
@@ -114,6 +115,7 @@ library
                  , blaze-markup
                  , esqueleto
                  , email-validate
+                 , yesod-json
 
 executable         conference-management-system
     if flag(library-only)

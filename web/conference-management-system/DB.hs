@@ -2,6 +2,7 @@ module DB where
 
 import Import
 import Data.PaperStatus
+import qualified Data.List as L
 import qualified Database.Esqueleto as E
 import Database.Esqueleto ((^.))
 import qualified Data.Text as T
@@ -39,7 +40,11 @@ getPapers :: Handler [Entity Paper]
 getPapers = do
     (uid, _user) <- requireAuthPair
     papers <- runDB $ selectList [PaperOwner ==. uid] []
-    return papers
+    authors <- runDB $ selectList [AuthorAuthorUser ==. uid] []
+    let authoredIds = map (\(Entity _aid author) -> authorPaper author) authors
+    authoredPapers <- mapM (\authoredId -> runDB $ get404 authoredId) authoredIds 
+    let authoredPapersEnts = map (\(a,b) -> Entity a b) (zip authoredIds authoredPapers)
+    return $ L.nub (papers ++ authoredPapersEnts)
 
 -- | Given some Entity Paper, returns the authors for the paper.
 -- Lifty/LH: u:User
@@ -170,6 +175,9 @@ like field val = Filter field (Left $ T.concat ["%", val, "%"])
 getPapersWithTitle :: Text -> Handler [Entity Paper]
 getPapersWithTitle title = runDB $ selectList [like PaperTitle title] []
 
+getUsersWithName :: Text -> Handler [Entity User]
+getUsersWithName name = runDB $ selectList [like UserUsername name] []
+
 -- | Gets papers with an abstract containing the input string
 -- NOTE: policy is the same for all search functions
 -- Lift/LH: u:User
@@ -214,15 +222,22 @@ getPapersWithAuthor authorName = do
                     )
     return papers
 
+-- | Only the PC should have access to this method.
 getAllPapers :: Handler [Entity Paper]
 getAllPapers = do
     papers <- runDB $ selectList [] []
     return papers
 
-getCurrentPhase :: Handler (Entity CurrentPhase)
-getCurrentPhase = do
-    phases <- runDB $ selectList [] [] 
-    return $ case phases of
-        [x] -> x
-        _ -> error "There should only be one phase"
+-- | gets all the papers that the reviewer is not conflicted on
+getAllViewablePapers :: UserId -> Handler [Entity Paper]
+getAllViewablePapers uid = do
+    conflicts <- runDB $ selectList [ConflictUser ==. uid] []
+    let conflictIds = map (\(Entity _cid conflict) -> conflictPaper conflict) conflicts
+    papers <- runDB $ selectList [] []
+    return $ filter (\(Entity paperId _paper) -> onotElem paperId conflictIds) papers
 
+getReviewsForPaper :: PaperId -> Handler [Entity Review]
+getReviewsForPaper p = runDB $ selectList [ReviewPaper ==. p] []
+
+getAcceptedPapers :: Handler [Entity Paper]
+getAcceptedPapers = runDB $ selectList [PaperPcAccepted ==. True] []

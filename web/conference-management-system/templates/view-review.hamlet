@@ -1,0 +1,22 @@
+<div .ui.container>
+    <h1>
+        Reviews of #{paperTitle paper}
+    <p> The paper may be downloaded <a href=@{DownloadR paperId}>here</a>.
+
+    $if not $ null reviews
+                <table .table >
+                    <tr>
+                        <th>
+                            Decision 
+                        <th>
+                            Comments
+                            
+                    $forall (Entity _rid review) <- reviews
+                        <tr>
+                           <td>
+                               #{show (reviewStatus review)}
+                           <td>
+                               #{reviewComments review}
+    $else
+      <p>
+         No reviewers assigned.

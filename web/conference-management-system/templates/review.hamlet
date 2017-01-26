@@ -23,3 +23,23 @@
                             <td>
                                 #{comments}
 
+<div .ui.container>
+    <h1> All Papers Submitted (not for you to review ;])
+    $if not $ null allPapers 
+                <table .table >
+                    <tr>
+                        <th>
+                            Paper
+                        <th>
+                            Abstract 
+                    $forall (Entity paperId paper) <- allPapers 
+                        <tr>
+                            <td>
+                                $if userPc user
+                                  <a href=@{ViewReviewR paperId}>
+                                      #{paperTitle paper}
+                                $else
+                                  <a href=@{DownloadR paperId}>
+                                      #{paperTitle paper}
+                            <td>
+                                #{paperAbstract paper}

@@ -36,7 +36,6 @@ import LoadEnv
 -- Don't forget to add new modules to your cabal file!
 import Handler.Common
 import Handler.Home
-import Handler.Profile
 import Handler.Upload
 import Handler.Download
 import Handler.Search
@@ -47,6 +46,8 @@ import Handler.AssignPaper
 import Handler.Ready
 import Handler.SetPhase
 import Handler.FinalDecision
+import Handler.SearchSuggest
+import Handler.ViewReview
 
 -- This line actually creates our YesodDispatch instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see the

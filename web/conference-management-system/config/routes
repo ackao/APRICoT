@@ -6,7 +6,6 @@
 
 / HomeR GET
 
-/profile ProfileR GET
 /upload UploadR GET POST
 /download/#PaperId DownloadR GET
 /search/#Text SearchR GET
@@ -17,3 +16,5 @@
 /ready/#PaperId ReadyR POST
 /set-phase/ SetPhaseR POST
 /final-decision/#PaperId/#Bool FinalDecisionR POST
+/search-suggest SearchSuggestR GET
+/see-reviews/#PaperId ViewReviewR GET

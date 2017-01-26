@@ -1,0 +1,5 @@
+<div .ui.container>
+    <h2>
+        Search is not ready yet!
+    <p>
+        We are currently in the #{show currentPhase} phase. Come back after decisions have come out!

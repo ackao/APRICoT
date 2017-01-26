@@ -1,39 +1,51 @@
 module Handler.Upload where
 
 import Import
-import Text.Julius
+import DB
 import qualified Util as Util
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
 import Data.Conduit.Binary
 
 import Yesod.Form.Bootstrap3 (BootstrapFormLayout (..), renderBootstrap3)
+import Yesod.Form.Jquery (jqueryAutocompleteField)
 
 data FileForm = FileForm
     { fileInfo :: FileInfo
     , title    :: Text
-    , authors  :: [Text]
+    , author1  :: Text
+    , author2  :: Maybe Text
+    , author3  :: Maybe Text
+    , author4  :: Maybe Text
     , abstract :: Textarea
     , conflicts :: Maybe [Key User]
     }
+
+aToList :: Maybe Text -> [Text]
+aToList (Just a) = [a]
+aToList Nothing = []
 
 postUploadR :: Handler Html
 postUploadR = do
     reviewerOpts <- Util.reviewerOpts
     ((result, _), _) <- runFormPost $ uploadForm reviewerOpts
     case result of
-        FormSuccess (FileForm fi title authors abstract mConflicts) -> do
+        FormSuccess (FileForm fi title a1 a2 a3 a4 abstract mConflicts) -> do
+            -- I'm sad that I had to do this, but making a custom field was hard!
+            let authors = [a1] ++ (aToList a2) ++ (aToList a3) ++ (aToList a4)
             case not (fileContentType fi == "application/pdf") of
                 True -> do
                     setMessage "File must be a PDF"
                     redirect UploadR
                 False -> do
                     fileBytes <- runResourceT $ fileSource fi $$ sinkLbs
-                    (uid, _) <- requireAuthPair
+                    (uid, _user) <- requireAuthPair
                     paperId <- runDB $ insert $ Paper uid (fileName fi)
                             title (unTextarea abstract)
                                  (S.pack . L.unpack $ fileBytes) False False
-                    _ <- runDB $ mapM (\author -> insert_ $ Author author paperId) authors
+                    authorIds  <- mapM getUserForUsername authors
+                    let authorsAndIds = zip authors authorIds
+                    _ <- runDB $ mapM (\(author, Entity aUid _a) -> insert_ $ Author author aUid paperId) authorsAndIds
                     case mConflicts of
                         Just conflicts -> do
                             _ <- runDB $ mapM (\conflict -> insert_ $ Conflict paperId conflict) conflicts
@@ -57,20 +69,9 @@ uploadForm :: [(Text, Key User)] -> Form FileForm
 uploadForm reviewerOpts = renderBootstrap3 BootstrapBasicForm $ FileForm
     <$> fileAFormReq "Choose a file"
     <*> areq textField "Paper Title" Nothing
-    <*> areq authorsField "Authors" Nothing
+    <*> areq (jqueryAutocompleteField SearchSuggestR) "Author 1" Nothing
+    <*> aopt (jqueryAutocompleteField SearchSuggestR) "Author 2" Nothing
+    <*> aopt (jqueryAutocompleteField SearchSuggestR) "Author 3" Nothing
+    <*> aopt (jqueryAutocompleteField SearchSuggestR) "Author 4" Nothing
     <*> areq textareaField "Abstract" Nothing
     <*> aopt (checkboxesFieldList reviewerOpts) "Conflicts" Nothing
-
-
-
-authorsField :: Field Handler [Text]
-authorsField = Field
-    { fieldParse = \rawVals _fileVals ->
-        case rawVals of
-            (x:xs) -> return $ Right $ Just (x:xs)
-            [] -> return $ Left "You must add at least one author" 
-    , fieldView = \idAttr nameAttr _otherAttrs _eResult _isReq ->
-        let _ =  $(juliusFileReload "templates/authors-form.julius") in
-        $(widgetFile "authors-form")
-    , fieldEnctype = UrlEncoded
-    }

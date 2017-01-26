@@ -18,8 +18,12 @@
                     $forall (authors, Entity paperId paper) <- authorsAndPapers 
                         <tr>
                             <td>
-                                <a href=@{DownloadR paperId}>
-                                    #{paperFilepath paper}
+                                $if isDecisionPhase
+                                    <a href=@{ViewReviewR paperId}>
+                                        #{paperFilepath paper}
+                                $else 
+                                    <a href=@{DownloadR paperId}>
+                                        #{paperFilepath paper}
                             <td>
                                 #{paperTitle paper}
                             <td>
@@ -33,3 +37,29 @@
                                         <input type="submit" value="Mark Not Ready">
                                     $else
                                         <input type="submit" value="Mark Ready">
+    $if isDecisionPhase
+        <h1>
+            Accepted Papers
+        $if not $ null acceptedAuthorsAndPapers 
+                    <table .table >
+                        <tr>
+                            <th>
+                                Paper
+                            <th>
+                                Title 
+                            <th>
+                                Authors 
+                            <th>
+                                Abstract 
+                        $forall (authors, Entity paperId paper) <- acceptedAuthorsAndPapers 
+                            <tr>
+                                <td>
+                                    <a href=@{DownloadR paperId}>
+                                        #{paperFilepath paper}
+                                <td>
+                                    #{paperTitle paper}
+                                <td>
+                                    $forall (Entity _ authorEntity) <- authors
+                                        <p> #{authorAuthor authorEntity}
+                                <td>
+                                    #{paperAbstract paper}
