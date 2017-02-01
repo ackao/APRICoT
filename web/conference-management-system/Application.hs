@@ -18,6 +18,7 @@ module Application
 import Control.Monad.Logger                 (liftLoc, runLoggingT)
 import Database.Persist.Sqlite              (createSqlitePool, runSqlPool,
                                              sqlDatabase, sqlPoolSize)
+import Database.Persist.Postgresql          (createPostgresqlPool)
 import Import
 import Language.Haskell.TH.Syntax           (qLocation)
 import Network.Wai (Middleware)
@@ -49,6 +50,9 @@ import Handler.FinalDecision
 import Handler.SearchSuggest
 import Handler.ViewReview
 
+import Web.Heroku (dbConnParams)
+import qualified Data.Text as T
+
 -- This line actually creates our YesodDispatch instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see the
 -- comments there for more details.
@@ -58,8 +62,8 @@ mkYesodDispatch "App" resourcesApp
 -- performs initialization and returns a foundation datatype value. This is also
 -- the place to put your migrate statements to have automatic database
 -- migrations handled by Yesod.
-makeFoundation :: AppSettings -> IO App
-makeFoundation appSettings = do
+makeFoundation :: Bool -> AppSettings -> IO App
+makeFoundation development appSettings = do
     loadEnv
     -- Some basic initializations: HTTP connection manager, logger, and static
     -- subsite.
@@ -82,15 +86,29 @@ makeFoundation appSettings = do
         logFunc = messageLoggerSource tempFoundation appLogger
 
     -- Create the database connection pool
-    pool <- flip runLoggingT logFunc $ createSqlitePool
-        (sqlDatabase $ appDatabaseConf appSettings)
-        (sqlPoolSize $ appDatabaseConf appSettings)
+    -- This reads the Heroku env variable to get the DB config settings
+    pool <- if development then
+            flip runLoggingT logFunc $ createSqlitePool
+                (sqlDatabase $ appDatabaseConf appSettings)
+                (sqlPoolSize $ appDatabaseConf appSettings)
+        else do
+                dbparams <- dbConnParams
+                flip runLoggingT logFunc $ createPostgresqlPool
+                    (formatParams dbparams)
+                    (10)
 
     -- Perform database migration using our application's logging settings.
     runLoggingT (runSqlPool (runMigration migrateAll) pool) logFunc
 
     -- Return the foundation
     return $ mkFoundation pool
+
+    where
+        formatParams :: [(Text, Text)] -> ByteString
+        formatParams = encodeUtf8 . T.unwords . map toKeyValue
+
+toKeyValue :: (Text, Text) -> Text
+toKeyValue (k, v) = k `T.append` "=" `T.append` v
 
    -- | Convert our foundation to a WAI Application by calling @toWaiAppPlain@ and
 -- applying some additional middlewares.
@@ -133,7 +151,7 @@ warpSettings foundation =
 getApplicationDev :: IO (Settings, Application)
 getApplicationDev = do
     settings <- getAppSettings
-    foundation <- makeFoundation settings
+    foundation <- makeFoundation True settings
     wsettings <- getDevSettings $ warpSettings foundation
     app <- makeApplication foundation
     return (wsettings, app)
@@ -157,7 +175,7 @@ appMain = do
         useEnv
 
     -- Generate the foundation from the settings
-    foundation <- makeFoundation settings
+    foundation <- makeFoundation False settings
 
     -- Generate a WAI Application from the foundation
     app <- makeApplication foundation
@@ -172,7 +190,7 @@ appMain = do
 getApplicationRepl :: IO (Int, App, Application)
 getApplicationRepl = do
     settings <- getAppSettings
-    foundation <- makeFoundation settings
+    foundation <- makeFoundation False settings
     wsettings <- getDevSettings $ warpSettings foundation
     app1 <- makeApplication foundation
     return (getPort wsettings, foundation, app1)
@@ -187,7 +205,7 @@ shutdownApp _ = return ()
 
 -- | Run a handler
 handler :: Handler a -> IO a
-handler h = getAppSettings >>= makeFoundation >>= flip unsafeHandler h
+handler h = getAppSettings >>= makeFoundation False >>= flip unsafeHandler h
 
 -- | Run DB queries
 db :: ReaderT SqlBackend (HandlerT App IO) a -> IO a
